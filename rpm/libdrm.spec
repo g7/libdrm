@@ -9,18 +9,20 @@ Name:       libdrm
 # << macros
 
 Summary:    Direct Rendering Manager runtime library
-Version:    2.4.39
+Version:    2.4.96
 Release:    1
 Group:      System/Libraries
 License:    MIT
 URL:        http://dri.sourceforge.net
-Source0:    http://dri.freedesktop.org/libdrm/%{name}-%{version}.tar.bz2
-Source100:  libdrm.yaml
+Source0:    %{name}-%{version}.tar.bz2
+#Source100:  libdrm.yaml
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 BuildRequires:  pkgconfig(pciaccess) >= 0.10
 BuildRequires:  pkgconfig(pthread-stubs)
 BuildRequires:  pkgconfig(udev)
+BuildRequires:  xorg-macros >= 1.12
+
 
 %description
 %{summary}
@@ -58,6 +60,15 @@ Requires(postun): /sbin/ldconfig
 %description nouveau
 %{summary}.
 
+%package amdgpu
+Summary:    Direct Rendering Manager amdgpu api
+Group:      Development/Libraries
+Requires:   %{name} = %{version}-%{release}
+Requires(post): /sbin/ldconfig
+Requires(postun): /sbin/ldconfig
+
+%description amdgpu
+%{summary}.
 
 %ifarch %{ix86} x86_64
 %package intel
@@ -79,6 +90,7 @@ Requires:   %{name} = %{version}-%{release}
 Requires:   %{name}-omap = %{version}-%{release}
 Requires:   %{name}-radeon = %{version}-%{release}
 Requires:   %{name}-nouveau = %{version}-%{release}
+Requires:   %{name}-amdgpu = %{version}-%{release}
 %ifarch %{ix86} x86_64
 Requires:   %{name}-intel = %{version}-%{release}
 %endif
@@ -90,7 +102,7 @@ Requires:   kernel-headers
 
 
 %prep
-%setup -q -n %{name}-%{version}
+%setup -q -n %{name}-%{version}/libdrm
 
 # >> setup
 # << setup
@@ -134,6 +146,10 @@ rm -rf %{buildroot}
 
 %postun nouveau -p /sbin/ldconfig
 
+%post amdgpu -p /sbin/ldconfig
+
+%postun amdgpu -p /sbin/ldconfig
+
 %ifarch %{ix86} x86_64
 %post intel -p /sbin/ldconfig
 
@@ -167,6 +183,13 @@ rm -rf %{buildroot}
 %{_libdir}/libdrm_nouveau.so.*
 # << files nouveau
 
+%files amdgpu
+%defattr(-,root,root,-)
+# >> files amdgpu
+%{_libdir}/libdrm_amdgpu.so.*
+/usr/share/libdrm/amdgpu.ids
+# << files amdgpu
+
 %ifarch %{ix86} x86_64
 %files intel
 %defattr(-,root,root,-)
@@ -181,6 +204,8 @@ rm -rf %{buildroot}
 %dir %{_includedir}/libdrm
 %{_includedir}/omap/omap_drm.h
 %{_includedir}/libdrm/*.h
+%{_includedir}/libdrm/nouveau/*.h
+%{_includedir}/libdrm/nouveau/nvif/*.h
 %{_includedir}/*.h
 %{_libdir}/lib*.so
 %{_libdir}/pkgconfig/*.pc
